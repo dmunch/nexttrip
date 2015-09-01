@@ -52,7 +52,16 @@ stopsLayer = undefined;
 
 map.on('moveend', function(e) {
 	var center = map.getCenter();    
+
+	//use the browsers current date and time
+	var date = new Date();
+	var dateString = (date.getMonth() + 1) + '-' + date.getDate() + '-' + date.getFullYear();
+		
+	var time_from = date.getHours() + ':' + date.getMinutes() + ':00';
+	var time_to = date.getHours() + ':' + (date.getMinutes() + 5) + ':00';
+
 	var queryUrl = '/close_departure_points/' + center.lat + '/' + center.lng + '/' + getMapRadius();
+	queryUrl += '/' + dateString + '/' + time_from + '/' + time_to;
 
     $.get(queryUrl, function(departureFeatureCollection) {
 		if(stopsLayer !== undefined) {

@@ -30,23 +30,23 @@ function validateFloatParam(app, paramName) {
 validateFloatParam(app, 'lat');
 validateFloatParam(app, 'lon');
 validateFloatParam(app, 'distance');
+validateRegexpParam(app, '[0-9]?[0-9]-[0-9]?[0-9]-[0-9][0-9][0-9][0-9]$', 'date');
+validateRegexpParam(app, '[0-9]?[0-9]:[0-9]?[0-9]:[0-9]?[0-9]$', 'time_from');
+validateRegexpParam(app, '[0-9]?[0-9]:[0-9]?[0-9]:[0-9]?[0-9]$', 'time_to');
 
-app.get('/close_departure_points/:lat/:lon/:distance', function (req, res) {
+app.get('/close_departure_points/:lat/:lon/:distance/:date/:time_from/:time_to', function (req, res) {
 	//either connects a new client or gets us one from the connection pool
 	pg.connect(pgConnectionString, function(err, client, done) {
 		//Query the stored function with the parameters
 		var sql = 'SELECT * FROM close_depature_points_grouped($1, $2, $3, $4, $5, $6)';
 		
-		//use the current date
-		var date = new Date();
-		var dateString = (date.getMonth() + 1) + '-' + date.getDate() + '-' + date.getFullYear();
-		
-		var time_from = date.getHours() + ':' + date.getMinutes() + ':00';
-		var time_to = date.getHours() + ':' + (date.getMinutes() + 5) + ':00';
- 		
 		//make sure that distance is an integer
 		req.params.distance = req.params.distance | 0;
-		var query = client.query(sql, [req.params.lat, req.params.lon, req.params.distance, dateString, time_from, time_to]);
+		var date = req.params.date;
+		var time_from = req.params.time_from;
+		var time_to = req.params.time_to;
+
+		var query = client.query(sql, [req.params.lat, req.params.lon, req.params.distance, date, time_from, time_to]);
 		
 		//Construct a GeoJSON FeatureCollection
 		var featureCollection = {
