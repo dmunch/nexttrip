@@ -50,7 +50,7 @@ function getMapRadius() {
 
 stopsLayer = undefined;
 
-map.on('moveend', function(e) {
+function updateTimetables(){
 	var center = map.getCenter();    
 
 	//use the browsers current date and time
@@ -63,7 +63,7 @@ map.on('moveend', function(e) {
 	var queryUrl = '/close_departure_points/' + center.lat + '/' + center.lng + '/' + getMapRadius();
 	queryUrl += '/' + dateString + '/' + time_from + '/' + time_to;
 
-    $.get(queryUrl, function(departureFeatureCollection) {
+	$.get(queryUrl, function(departureFeatureCollection) {
 		if(stopsLayer !== undefined) {
 			map.removeLayer(stopsLayer);
 		}	
@@ -78,12 +78,15 @@ map.on('moveend', function(e) {
 				});
 
 				return L.circleMarker(latlng).bindLabel(html, { 
-				    noHide: true 
+					noHide: true 
 				}).addTo(map);
 			}
 		}).addTo(map);
 	});
-});
+}
+
+map.on('moveend', updateTimetables);
+setInterval(updateTimetables, 6000);
 
 </script>
 
