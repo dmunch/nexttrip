@@ -1,0 +1,28 @@
+postgis:
+  image: kartoza/postgis
+  ports:
+    - "5432:5432"
+  volumes:
+ #when on boot2docker pay attention with volumes on shared folders, there are problems with permission
+    - /tmp/postgres_data:/var/lib/postgresql
+
+gtfsdb: 
+  build: docker-gtfsdb/
+  links:
+    - postgis
+
+nexttrip-node:
+  build: nexttrip-node/
+  environment:
+    - PGUSER=docker
+    - PGPASSWORD=docker
+    - PGDATABASE=gis
+  ports:
+    - "3000:3000"
+  links:
+    - postgis
+
+bash:
+  image: ubuntu
+  links:
+    - postgis

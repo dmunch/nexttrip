@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>nexttrip.berlin</title>
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src='https://api.mapbox.com/mapbox.js/v2.2.1/mapbox.js'></script>
+<link href='https://api.mapbox.com/mapbox.js/v2.2.1/mapbox.css' rel='stylesheet' />
+
+<style>
+  body { margin:0; padding:0; }
+  #map { position:absolute; top:0; bottom:0; width:100%; }
+</style>
+
+</head>
+
+<body>
+<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v0.0.4/Leaflet.fullscreen.min.js'></script>
+<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v0.0.4/leaflet.fullscreen.css' rel='stylesheet' />
+
+<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-label/v0.2.1/leaflet.label.js'></script>
+<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-label/v0.2.1/leaflet.label.css' rel='stylesheet' />
+
+<script src='leaflet-gps/src/leaflet-gps.js'></script>
+<link href='leaflet-gps/src/leaflet-gps.css' rel='stylesheet'/>
+
+<div id='map'></div>
+
+<script>
+L.mapbox.accessToken = 'pk.eyJ1Ijoic3ByaW5nZGFuaWVsIiwiYSI6Imx4b2l5akkifQ.CSz_-01WtCVmpsFw1CokQw';
+
+var gpsControl = new L.Control.Gps({autoActive: true});
+gpsControl.on('gpslocated', function(lat, lng) {
+	console.log(lat,lng);
+});
+
+var map = L.mapbox.map('map', 'mapbox.streets')
+	.setView([52.4689729, 13.4352665], 15)
+	.addControl(gpsControl);
+
+L.control.fullscreen().addTo(map);
+
+function getMapRadius() {
+	var mapBoundNorthEast = map.getBounds().getNorthEast();
+	var mapDistance = mapBoundNorthEast.distanceTo(map.getCenter());
+	return mapDistance;
+}
+
+stopsLayer = undefined;
+
+map.on('moveend', function(e) {
+	var center = map.getCenter();    
+	var queryUrl = '/close_departure_points/' + center.lat + '/' + center.lng + '/' + getMapRadius();
+
+    $.get(queryUrl, function(departureFeatureCollection) {
+		if(stopsLayer !== undefined) {
+			map.removeLayer(stopsLayer);
+		}	
+		
+		stopsLayer = L.geoJson(departureFeatureCollection, {
+			pointToLayer: function (feature, latlng) {
+
+				//html concatenation, in case this gets more complicated we should probably use a template here
+				var html = feature.properties.stop_name;
+				feature.properties.trips.forEach(function(trip) {
+					html = html + "<br/>" + trip.departure_time + ": " + trip.route_short_name;
+				});
+
+				return L.circleMarker(latlng).bindLabel(html, { 
+				    noHide: true 
+				}).addTo(map);
+			}
+		}).addTo(map);
+	});
+});
+
+</script>
+</body>
+</html>
