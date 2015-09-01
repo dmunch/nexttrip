@@ -73,7 +73,6 @@ app.get('/close_departure_points/:lat/:lon/:distance/:date/:time_from/:time_to',
 		});
 
 		query.on('end', function() {
-			client.end();
 			done();
 
 			//return the feature collection as json
