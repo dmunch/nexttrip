@@ -12,6 +12,25 @@ var app = express();
 app.use(express.static(__dirname + '/public/'));
 app.use(express.static(__dirname + '/node_modules/'));
 
+function validateRegexpParam(app, regExp, paramName) {
+	app.param(paramName, function(req, res, next, param) {
+		var re = new RegExp(regExp)
+		if(!re.test(param)) {
+			res.status(400).send('Invalid parameter ' + paramName);
+		} else {
+			next();
+		}
+	});	
+}
+
+function validateFloatParam(app, paramName) {
+	validateRegexpParam(app, '^[-+]?[0-9]*(?:\.[0-9]*)?$', paramName);
+}
+
+validateFloatParam(app, 'lat');
+validateFloatParam(app, 'lon');
+validateFloatParam(app, 'distance');
+
 app.get('/close_departure_points/:lat/:lon/:distance', function (req, res) {
 	//either connects a new client or gets us one from the connection pool
 	pg.connect(pgConnectionString, function(err, client, done) {
